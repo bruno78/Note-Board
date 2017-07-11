@@ -4,6 +4,8 @@
     <script src="https://fb.me/react-15.2.1.js" charset="utf-8"></script>
     <script src="https://fb.me/react-dom-15.2.1.js" charset="utf-8"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.js" charset="utf-8"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fetch/1.0.0/fetch.js"></script>
+    <script src="https://npmcdn.com/react-draggable" charset="utf-8"></script>
     <meta charset="utf-8">
     <title>Note Board</title>
     <link rel="stylesheet" href="style.css">
@@ -21,6 +23,17 @@
             right: this.randomBetween(0, window.innerWidth - 150, 'px'),
             top: this.randomBetween(0, window.innerHeight - 150, 'px')
           }
+        },
+        componentDidUpdate() {
+          if (this.state.editing) {
+            this.refs.newText.focus()
+            this.refs.newText.select()
+          }
+        },
+        // This will prevent unnecessary rendering if NOTHING has changed (no edit was made)
+        shouldComponentUpdate(nextProps, nextState) {
+          return this.props.children !== nextProps.children ||
+                 this.props.state !== nextState.children
         },
         randomBetween(x, y, s) {
           return (x + Math.ceil(Math.random() * (y-x))) + s
@@ -42,7 +55,8 @@
         renderForm(){
           return (
             <div className="note" style={this.style}>
-              <textarea ref="newText"></textarea>
+              <textarea ref="newText"
+                         defaultValue={this.props.children}></textarea>
               <button onClick={this.save}>SAVE</button>
               <button onClick={this.cancel}>CANCEL</button>
             </div>
@@ -60,7 +74,11 @@
           )
         },
         render(){
-          return (this.state.editing) ? this.renderForm() : this.renderDisplay()
+          return (
+            <ReactDraggable>
+              {(this.state.editing) ? this.renderForm() : this.renderDisplay()}
+            </ReactDraggable>
+          )
         }
       })
 
@@ -79,6 +97,20 @@
         getInitialState() {
           return {
             notes: []
+          }
+        },
+        componentWillMount(){
+          if (this.props.count) {
+            var url = `http://baconipsum.com/api/?type=all-meat&sentences=${this.props.count}`
+            fetch(url)
+                .then(results => results.json())
+                .then(array => array[0])
+                .then(text => text.split('. '))
+                .then(array => array.forEach(
+                    sentence => this.add(sentence)))
+                .catch(function(err) {
+                  console.log("Didn't connect to the API", err)
+                })
           }
         },
         nextId(){
