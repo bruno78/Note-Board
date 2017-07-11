@@ -33,7 +33,7 @@
         // This will prevent unnecessary rendering if NOTHING has changed (no edit was made)
         shouldComponentUpdate(nextProps, nextState) {
           return this.props.children !== nextProps.children ||
-                 this.props.state !== nextState.children
+                 this.state !== nextState
         },
         randomBetween(x, y, s) {
           return (x + Math.ceil(Math.random() * (y-x))) + s
